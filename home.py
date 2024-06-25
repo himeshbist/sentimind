@@ -1,39 +1,52 @@
 import streamlit as st
-import pickle
-import time
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 from textblob import TextBlob
-
+from wordcloud import WordCloud
+import gzip
+import pickle
+import time
+import logging
+ 
+ 
 def load_model():
-    model_path = r"C:\Users\Himesh\Downloads\new_senti\sentimind\twitter_sentiment_new.pkl"
+    model_path = r"C:\Users\Himesh\Downloads\new_senti\twitter_sentiment.pkl"
     try:
         with open(model_path, 'rb') as f:
-            return pickle.load(f)
-    except FileNotFoundError:
-        st.error("File not found. Check the file path.")
-        return None
-    except pickle.UnpicklingError:
-        st.error("Error loading the model. Check the file integrity.")
-        return None
-
+            model = pickle.load(f)
+            logging.info("Model loaded successfully.")
+            return model
+    except (FileNotFoundError, pickle.UnpicklingError) as e:
+        logging.error(f"Error loading model: {e}")
+        st.error(f"Error loading model. Please check the file path and integrity.")
+        return None 
+    
 model = load_model()
 
 def analyze_text(model, text):
-    if model is None:
-        st.error("Model is not loaded successfully.")
-        return None, None
+    if not model:
+        st.error("Model is not available.")
+        return None, None, None
+
+    if not text.strip():
+        st.warning("Input text is empty. Please enter valid text.")
+        return None, None, None
 
     start_time = time.time()
-    prediction = model.predict([text])[0]
+    try:
+        prediction = model.predict([text])[0]
+    except Exception as e:
+        st.error(f"Error during sentiment prediction: {str(e)}")
+        return None, None, None
     end_time = time.time()
-    return prediction, round(end_time - start_time, 2)
+
+    sentiment_score = TextBlob(text).sentiment.polarity
+
+    return prediction, round(end_time - start_time, 2), sentiment_score
 
 def show():
-    
-    
     st.markdown("""
     <style>
     body {
@@ -84,7 +97,7 @@ def show():
             help="Enter a text to analyze its sentiment"
         )
 
-        col1, col2, col3 = st.columns([1,1,1])
+        col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
             submit_button = st.button("🔍 Analyze Sentiment", help="Click to analyze the sentiment of the text")
 
@@ -93,15 +106,14 @@ def show():
         if submit_button:
             if tweet_input:
                 try:
-                    prediction, analysis_time = analyze_text(model, tweet_input)
+                    prediction, analysis_time, sentiment_score = analyze_text(model, tweet_input)
                     with prediction_output:
                         if prediction is not None:
                             st.write(f"**Prediction:** {prediction}")
                             st.write(f"**Time taken:** {analysis_time} seconds")
+                            st.write(f"**Sentiment Score:** {sentiment_score}")
                           
-                            
                             # Add a cool word cloud
-                            from wordcloud import WordCloud
                             wordcloud = WordCloud(width=800, height=400, background_color='white').generate(tweet_input)
                             fig, ax = plt.subplots()
                             ax.imshow(wordcloud, interpolation='bilinear')
@@ -132,12 +144,14 @@ def show():
 
                 predictions = []
                 analysis_times = []
+                sentiment_scores = []
                 for text in texts:
-                    prediction, analysis_time = analyze_text(model, text)
+                    prediction, analysis_time, sentiment_score = analyze_text(model, text)
                     predictions.append(prediction)
                     analysis_times.append(analysis_time)
+                    sentiment_scores.append(sentiment_score)
 
-                df = pd.DataFrame({"Text": texts, "Sentiment": predictions})
+                df = pd.DataFrame({"Text": texts, "Sentiment": predictions, "Sentiment Score": sentiment_scores})
                 st.write(df)
 
                 # Interactive Visualization
@@ -147,9 +161,9 @@ def show():
                 st.write(f"**Average Time per Analysis:** {sum(analysis_times)/len(analysis_times):.2f} seconds")
 
                 # Add a cool heatmap of sentiment over time
-                df['Timestamp'] = pd.date_range(start='1/1/2023', periods=len(df), freq='D')
-                df['SentimentScore'] = df['Text'].apply(lambda x: TextBlob(x).sentiment.polarity)
-                fig = px.density_heatmap(df, x='Timestamp', y='SentimentScore', nbinsy=20, 
+                if 'Timestamp' not in df.columns:
+                    df['Timestamp'] = pd.date_range(start='1/1/2023', periods=len(df), freq='D')
+                fig = px.density_heatmap(df, x='Timestamp', y='Sentiment Score', nbinsy=20, 
                                          title='Sentiment Heatmap Over Time')
                 st.plotly_chart(fig)
 
