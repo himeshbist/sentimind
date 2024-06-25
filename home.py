@@ -12,7 +12,7 @@ import logging
  
  
 def load_model():
-    model_path = r"C:\Users\Himesh\Downloads\new_senti\twitter_sentiment.pkl"
+    model_path = "C:\Users\Himesh\Downloads\new_senti\twitter_sentiment.pkl"
     try:
         with open(model_path, 'rb') as f:
             model = pickle.load(f)
