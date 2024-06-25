@@ -3,3 +3,4 @@ streamlit_option_menu
 firebase_admin
 python-dotenv==0.21.1
 matplotlib
+seaborn
