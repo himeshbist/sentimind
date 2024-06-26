@@ -5,17 +5,13 @@ import seaborn as sns
 import plotly.express as px
 from textblob import TextBlob
 from wordcloud import WordCloud
-import gzip
 import pickle
 import time
 import logging
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-
+ 
+ 
 def load_model():
-    # Use relative path to ensure the model file can be found regardless of the running directory
-    model_path = "twitter_sentiment.pkl"  # Assuming the model is in the same directory as the script
+    model_path = r"C:\Users\Himesh\Downloads\new_senti\twitter_sentiment.pkl"
     try:
         with open(model_path, 'rb') as f:
             model = pickle.load(f)
@@ -24,8 +20,8 @@ def load_model():
     except (FileNotFoundError, pickle.UnpicklingError) as e:
         logging.error(f"Error loading model: {e}")
         st.error(f"Error loading model. Please check the file path and integrity.")
-        return None
-
+        return None 
+    
 model = load_model()
 
 def analyze_text(model, text):
@@ -80,7 +76,7 @@ def show():
     }
     </style>
     """, unsafe_allow_html=True)
-
+    
     st.title("🔮 Sentiment Analysis Wizard")
 
     tab1, tab2 = st.tabs(["✨ Direct Input", "📁 Upload File"])
@@ -115,7 +111,7 @@ def show():
                             st.write(f"**Prediction:** {prediction}")
                             st.write(f"**Time taken:** {analysis_time} seconds")
                             st.write(f"**Sentiment Score:** {sentiment_score}")
-
+                          
                             # Add a cool word cloud
                             wordcloud = WordCloud(width=800, height=400, background_color='white').generate(tweet_input)
                             fig, ax = plt.subplots()
@@ -166,7 +162,7 @@ def show():
                 # Add a cool heatmap of sentiment over time
                 if 'Timestamp' not in df.columns:
                     df['Timestamp'] = pd.date_range(start='1/1/2023', periods=len(df), freq='D')
-                fig = px.density_heatmap(df, x='Timestamp', y='Sentiment Score', nbinsy=20,
+                fig = px.density_heatmap(df, x='Timestamp', y='Sentiment Score', nbinsy=20, 
                                          title='Sentiment Heatmap Over Time')
                 st.plotly_chart(fig)
 
