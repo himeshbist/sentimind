@@ -8,10 +8,13 @@ from wordcloud import WordCloud
 import pickle
 import time
 import logging
- 
+from pydrive.auth import GoogleAuth
+import os
+os.system("wget https://drive.google.com/file/d/1uaIJDOtrKbYRnd7KnrsEyy7KwV_j5zhZ/view?usp=drive_link")
+
  
 def load_model():
-    model_path = "model/twitter_sentiment.pkl"
+    model_path = "twitter_sentiment.pkl"
     try:
         with open(model_path, 'rb') as f:
             model = pickle.load(f)
