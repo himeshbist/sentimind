@@ -14,7 +14,7 @@ os.system("wget https://drive.google.com/file/d/1uaIJDOtrKbYRnd7KnrsEyy7KwV_j5zh
 
  
 def load_model():
-    model_path = "twitter_sentiment.pkl"
+    model_path = r"twitter_sentiment.pkl"
     try:
         with open(model_path, 'rb') as f:
             model = pickle.load(f)
